@@ -3,8 +3,11 @@ import random
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, viewsets, permissions, generics
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+
 from time_tracker.permissions import IsMemberInProject, IsProjectOwner, IsAllowedToStopTaskTime
 from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 from .functions import invitation_code_validator
@@ -152,30 +155,27 @@ class InviteMembersView(generics.CreateAPIView):
         # if self.request.user in Project.objects.get(id=self.request.data.get('project')):
         invitation_code = random.randint(100000, 999999)
         # TODO: Send Invitation Email - celery task
+        print(serializer)
         serializer.save(invitation_code=invitation_code)
 
 
-class ResponseToInvitation(APIView):
+class ResponseToInvitation(generics.UpdateAPIView):
     serializer_class = ResponseToInvitationSerializer
     permission_classes = [
         permissions.IsAuthenticated,
     ]
 
-    # def get_queryset(self):
-    #     code = self.request.data.get('invitation_code')
-    #     email = self.request.data.get('email')
-    #     validate = invitation_code_validator(email, code)
-    #     if validate != -1:
-    #         return Project.objects.get(id=validate)
-
     def put(self, request, *args, **kwargs):
         code = self.request.data.get('invitation_code')
         email = self.request.user.email
         prj = invitation_code_validator(email, code)
+        print(prj)
+        print(dir(prj))
         if prj != -1:
             # prj = Project.objects.get(id=validate)
             # prj.members.add(self.request.user)
             prj.members.add(self.request.user)
+            prj.save()
             return Response({"msg": f"welcome to {prj.title}"})
         else:
             raise Exception("You are not invited")

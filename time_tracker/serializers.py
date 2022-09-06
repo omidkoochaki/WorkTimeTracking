@@ -3,9 +3,10 @@ from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Project
-        fields = ['title', 'budget', 'deadline']
+        fields = ['id', 'title', 'budget', 'deadline', 'owner', 'members']
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -15,8 +16,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class WorkTimeRecordSerializer(serializers.ModelSerializer):
-    project = ProjectSerializer(many=True, read_only=True)
-    task = TaskSerializer(many=True, read_only=True)
+    # project = ProjectSerializer(many=True, read_only=True)
+    # task = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkTimeRecord
@@ -24,8 +25,8 @@ class WorkTimeRecordSerializer(serializers.ModelSerializer):
 
 
 class WorkTimeRecordSerializerStart(serializers.ModelSerializer):
-    project = ProjectSerializer(many=True, read_only=True)
-    task = TaskSerializer(many=True, read_only=True)
+    # project = ProjectSerializer(many=True, read_only=True)
+    # task = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkTimeRecord
@@ -33,7 +34,7 @@ class WorkTimeRecordSerializerStart(serializers.ModelSerializer):
 
 
 class InviteMemberSerializer(serializers.ModelSerializer):
-    project = ProjectSerializer(many=True, read_only=True)
+    # project = ProjectSerializer(many=True, read_only=True)
 
     class Meta:
         model = InvitedMembers
@@ -44,4 +45,7 @@ class InviteMemberSerializer(serializers.ModelSerializer):
 class ResponseToInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvitedMembers
-        fields = ['email', 'invitation_code']
+        fields = ['invitation_code']
+
+
+#951142

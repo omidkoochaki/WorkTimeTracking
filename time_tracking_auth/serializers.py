@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import fields
+from knox.serializers import UserSerializer as knoxUserSerializer
 from rest_framework import serializers
 
 from time_tracker.serializers import ProjectSerializer

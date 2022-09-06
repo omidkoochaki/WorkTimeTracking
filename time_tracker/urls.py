@@ -7,6 +7,7 @@ from .views import ProjectAPIView, TaskAPIView, WorkingTimeAPIViewCreate, Workin
 router = routers.DefaultRouter()
 router.register('projects', ProjectAPIView, 'projects')
 router.register('tasks', TaskAPIView, 'tasks')
+# router.register('invitation_response', ResponseToInvitation, 'invitation_response')
 # router.register('times', WorkingTimeAPIViewCreate.as_view(), 'working_time_records')
 # router.register('stop', WorkingTimeAPIViewStop.as_view(), 'working_time_records')
 # urls = [path('times/', WorkingTimeAPIView.as_view(
