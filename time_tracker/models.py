@@ -7,7 +7,7 @@ from django.db.models.deletion import CASCADE, PROTECT
 # Create your models here.
 from rest_framework.exceptions import MethodNotAllowed, NotAcceptable
 
-from core.BaseModels import BaseModel
+from core.BaseModels import BaseModel, BaseManager
 
 
 class Project(BaseModel):
@@ -55,6 +55,8 @@ class WorkTimeRecord(models.Model):
     month = models.IntegerField(default=datetime.datetime.now().month)
     day = models.IntegerField(default=datetime.datetime.now().day)
 
+    objects = BaseManager()
+
     @property
     def duration(self):
         print(self.start_time, self.end_time, '=*' * 30)
@@ -65,7 +67,8 @@ class WorkTimeRecord(models.Model):
             # raise NotAcceptable(detail='First hit the Stop working then ask for duration')
 
     class Meta:
-        unique_together = ('task', 'year', 'month', 'day', 'start_time')
+        unique_together = ('task', 'year', 'month', 'day', 'doer', 'end_time')
+        #  with make end_time unique with doer we guarantee that each doer will start a task once before end it.
 
 
 class InvitedMembers(BaseModel):

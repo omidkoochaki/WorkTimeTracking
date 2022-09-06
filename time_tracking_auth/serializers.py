@@ -6,8 +6,13 @@ from django.db import models
 from django.db.models import fields
 from rest_framework import serializers
 
+from time_tracker.serializers import ProjectSerializer
+
 
 class UserSerializer(serializers.ModelSerializer):
+    member_in_projects = ProjectSerializer(many=True, read_only=True)
+    owner_of_projects = ProjectSerializer(many=True, read_only=True)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'member_in_projects', 'owner_of_projects']

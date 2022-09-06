@@ -1,10 +1,11 @@
+import datetime
 import random
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from time_tracker.permissions import IsMemberInProject, IsProjectOwner
+from time_tracker.permissions import IsMemberInProject, IsProjectOwner, IsAllowedToStopTaskTime
 from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 from .functions import invitation_code_validator
 from .serializers import ProjectSerializer, TaskSerializer, WorkTimeRecordSerializer, WorkTimeRecordSerializerStart, \
@@ -103,10 +104,11 @@ class WorkingTimeAPIViewCreate(generics.CreateAPIView):
     ]
 
     def perform_create(self, serializer):
-        if self.request.user in Project.objects.get(id=self.request.data.get('project')):
-            serializer.save(doer=self.request.user)
-        else:
-            raise Exception("You should be a member in this project")
+        serializer.save(doer=self.request.user)
+        # if self.request.user in Project.objects.get(id=self.request.data.get('project')):
+        #     serializer.save(doer=self.request.user)
+        # else:
+        #     raise Exception("You should be a member in this project")
 
     # def create(self, request, *args, **kwargs):
     #     return super().create(request, *args, **kwargs)
@@ -125,16 +127,18 @@ class WorkingTimeAPIViewCreate(generics.CreateAPIView):
 class WorkingTimeAPIViewStop(APIView):
     serializer_class = WorkTimeRecordSerializer
     permission_classes = [
-        permissions.IsAuthenticated
+        permissions.IsAuthenticated,
+        IsAllowedToStopTaskTime
     ]
 
-    def put(self, request):
-        print(request)
-        return Response({'yes': 'yes'})
-
-    def get(self, request):
-        print(request)
-        return Response({'yes': 'yes'})
+    def put(self, request, *args, **kwargs):
+        doer = self.request.user
+        project = self.request.data.get('project')
+        task = self.request.data.get('task')
+        work_time_record = WorkTimeRecord.objects\
+            .filter(doer=doer, project=project, task=task, end_time=None)\
+            .update(end_time=datetime.datetime.now().timestamp())
+        return Response({'msg': 'done, have a good time!', 'data': work_time_record})
 
 
 class InviteMembersView(generics.CreateAPIView):

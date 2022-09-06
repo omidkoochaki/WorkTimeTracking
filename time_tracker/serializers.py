@@ -5,7 +5,7 @@ from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ['title', 'budget', 'deadline']
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -15,18 +15,26 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class WorkTimeRecordSerializer(serializers.ModelSerializer):
+    project = ProjectSerializer(many=True, read_only=True)
+    task = TaskSerializer(many=True, read_only=True)
+
     class Meta:
         model = WorkTimeRecord
-        fields = '__all__'
+        fields = ['project', 'task']
 
 
 class WorkTimeRecordSerializerStart(serializers.ModelSerializer):
+    project = ProjectSerializer(many=True, read_only=True)
+    task = TaskSerializer(many=True, read_only=True)
+
     class Meta:
         model = WorkTimeRecord
         fields = ['project', 'task']
 
 
 class InviteMemberSerializer(serializers.ModelSerializer):
+    project = ProjectSerializer(many=True, read_only=True)
+
     class Meta:
         model = InvitedMembers
         # TODO: Remove 'invitation_code' field in production
@@ -37,4 +45,3 @@ class ResponseToInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvitedMembers
         fields = ['email', 'invitation_code']
-
