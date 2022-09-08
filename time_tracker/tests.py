@@ -9,7 +9,6 @@ from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers, T
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
-
 seeder = Seed.seeder()
 
 
@@ -173,4 +172,24 @@ class TaskAndProjectTimeTestCase(APITestCase):
         self.assertEquals({projects[0]: (result[tasks[0]] + result[tasks[1]])}, project_time_response)
 
 
+class ProjectsRelationWithUsersQueryTest(APITestCase):
+    def setUp(self):
+        self.project_owner = User.objects.create_user('project_owner', 'project@owner.com', 'project_owner123')
+        seeder.add_entity(User, 20)
+        user_pks = seeder.execute()
+        project = Project.objects.create(title='TEST PROJ', owner=self.project_owner, deadline='2022-09-12',
+                                         budget=1000.0)
+        all_users = User.objects.all()
+        for user in all_users:
+            project.members.add(user)
+        print(project.members)
+        res = self.client.post('/auth/login', data={'username': 'project_owner', 'password': 'project_owner123'})
+        self.headers = {
+            'Content-Type': 'application/json',
+            'HTTP_AUTHORIZATION': f'Token {res.json().get("token")}',
+        }
 
+    def test_num_of_query(self):
+        # TODO Find ways to decrease below '5'
+        with self.assertNumQueries(5):
+            self.client.get(path='/api/projects/', **self.headers)

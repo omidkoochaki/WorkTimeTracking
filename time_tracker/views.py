@@ -21,6 +21,7 @@ from .serializers import ProjectSerializer, TaskSerializer, WorkTimeRecordSerial
 class ProjectAPIView(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     queryset = Project.objects.select_related('members').all()
+    # queryset = Project.objects.all()
     permission_classes = [
         permissions.IsAuthenticated
     ]
@@ -166,3 +167,6 @@ class ResponseToInvitation(generics.UpdateAPIView):
             return Response({"msg": f"welcome to {prj.title}"})
         else:
             raise HTTPException("You are not invited")
+
+
+# class ProjectReporter(APIView)

@@ -3,7 +3,6 @@ from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Project
         fields = ['id', 'title', 'budget', 'deadline', 'owner', 'members']
@@ -48,4 +47,8 @@ class ResponseToInvitationSerializer(serializers.ModelSerializer):
         fields = ['invitation_code']
 
 
-#951142
+class ProjectOneDayReportSerializer(serializers.Serializer):
+    date = serializers.DateField()
+
+    def validate(self, attrs):
+        print(attrs, '<<<'*20)
