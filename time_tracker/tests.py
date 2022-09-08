@@ -4,8 +4,8 @@ from http.client import HTTPException
 from django.urls import reverse
 from django_seed import Seed
 from rest_framework.test import APITestCase
-from time_tracker.functions import calculate_task_total_time_in_day
-from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
+from time_tracker.functions import calculate_task_total_time_in_last_day, calculate_project_total_time_in_day
+from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers, TaskDailyReporting, ProjectDailyReporting
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
@@ -86,8 +86,6 @@ class ProjectTestCase(APITestCase):
         data = {
             'invitation_code': self.invitation_code,
         }
-        # res = self.client.put(reverse('invitation_response'), data=data, **self.headers)
-        # print(res.json(), "<<<"*30)
         with self.assertRaisesMessage(HTTPException, 'You are not invited') as cm:
             self.client.put(reverse('invitation_response'), data=data, **self.headers)
 
@@ -108,56 +106,71 @@ class ProjectTestCase(APITestCase):
         self.assertEquals(res.json(), {'detail': 'You do not have permission to perform this action.'})
 
 
-# class TaskTimeTestCase(APITestCase):
-#     def test_list_projects(self):
-#         seeder.add_entity(User, 5)
-#         seeder.execute()
-#         users = User.objects.all()
-#         seeder.add_entity(Project, 10, {
-#             'owner': users[0],
-#         })
-#         seeder.execute()
-#         projects = Project.objects.all()
-#         seeder.add_entity(Task, 10, {
-#             'assignee': users[0],
-#             'project': projects[0],
-#         })
-#         seeder.execute()
-#         tasks = Task.objects.all()
-#         yesterday = (datetime.now() - timedelta(1)).date()
-#         year, month, yesterday = str(yesterday).split('-')
-#         year, month, yesterday = int(year), int(month), int(yesterday)
-#
-#         for i in range(10):
-#             time = float(random.randint(1662566177, 1762566177))
-#             seeder.add_entity(WorkTimeRecord, 1, {
-#                 'year': year,
-#                 'month': month,
-#                 'day': yesterday,
-#                 'task': tasks[0],
-#                 'start_time': time,
-#                 'end_time': time + 60.0,
-#                 'project': projects[0],
-#                 'doer': users[0],
-#             })
-#             seeder.execute()
-#         for i in range(10):
-#             time = float(random.randint(1662566177, 1762566177))
-#             seeder.add_entity(WorkTimeRecord, 1, {
-#                 'year': year,
-#                 'month': month,
-#                 'day': yesterday,
-#                 'task': tasks[1],
-#                 'start_time': time,
-#                 'end_time': time + 120.0,
-#                 'project': projects[0],
-#                 'doer': users[0],
-#             })
-#             seeder.execute()
-#         response = calculate_task_total_time_in_day()
-#         result = {tasks[0].id:
-#                       60 * len(WorkTimeRecord.objects.filter(day=yesterday, month=month, year=year, task=tasks[0])),
-#                   tasks[1].id:
-#                       120 * len(WorkTimeRecord.objects.filter(day=yesterday, month=month, year=year, task=tasks[1]))
-#                   }
-#         self.assertEqual(response, result)
+class TaskAndProjectTimeTestCase(APITestCase):
+    def test_list_projects(self):
+        seeder.add_entity(User, 5)
+        seeder.execute()
+        users = User.objects.all()
+        seeder.add_entity(Project, 10, {
+            'owner': users[0],
+        })
+        seeder.execute()
+        projects = Project.objects.all()
+        seeder.add_entity(Task, 10, {
+            'assignee': users[0],
+            'project': projects[0],
+        })
+        seeder.execute()
+        tasks = Task.objects.all()
+        yesterday = (datetime.now() - timedelta(1)).date()
+        year, month, yesterday = str(yesterday).split('-')
+        year, month, yesterday = int(year), int(month), int(yesterday)
+
+        for i in range(10):
+            time = float(random.randint(1662566177, 1762566177))
+            seeder.add_entity(WorkTimeRecord, 1, {
+                'year': year,
+                'month': month,
+                'day': yesterday,
+                'task': tasks[0],
+                'start_time': time,
+                'end_time': time + 60.0,
+                'project': projects[0],
+                'doer': users[0],
+            })
+            seeder.execute()
+        for i in range(10):
+            time = float(random.randint(1662566177, 1762566177))
+            seeder.add_entity(WorkTimeRecord, 1, {
+                'year': year,
+                'month': month,
+                'day': yesterday,
+                'task': tasks[1],
+                'start_time': time,
+                'end_time': time + 120.0,
+                'project': projects[0],
+                'doer': users[0],
+            })
+            seeder.execute()
+        task_time_response = calculate_task_total_time_in_last_day()
+        result = {tasks[0]:
+                      60 * len(WorkTimeRecord.objects.filter(day=yesterday, month=month, year=year, task=tasks[0])),
+                  tasks[1]:
+                      120 * len(WorkTimeRecord.objects.filter(day=yesterday, month=month, year=year, task=tasks[1]))
+                  }
+        # TEST SAVING THE TOTAL TIME SPENT IN TASK1 YESTERDAY
+        self.assertEquals(task_time_response[tasks[0]],
+                          TaskDailyReporting.objects.get(task__id=tasks[0].id).total_time_seconds)
+        # TEST SAVING THE TOTAL TIME SPENT IN TASK2 YESTERDAY
+        self.assertEquals(task_time_response[tasks[1]],
+                          TaskDailyReporting.objects.get(task__id=tasks[1].id).total_time_seconds)
+        self.assertEqual(task_time_response, result)
+
+        project_time_response = calculate_project_total_time_in_day()
+        # TEST SAVING THE TOTAL TIME SPENT IN PROJECT1 YESTERDAY
+        self.assertEquals(project_time_response[projects[0]],
+                          ProjectDailyReporting.objects.get(project__id=projects[0].id).total_time_seconds)
+        self.assertEquals({projects[0]: (result[tasks[0]] + result[tasks[1]])}, project_time_response)
+
+
+

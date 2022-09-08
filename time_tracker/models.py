@@ -83,19 +83,25 @@ class TaskDailyReporting(BaseModel):
     """
     at 1 AM a celery worker will do the calculations
     """
-    task = models.ForeignKey(Task, on_delete=CASCADE, unique=True)
+    task = models.ForeignKey(Task, on_delete=CASCADE)
     total_time_seconds = models.IntegerField(default=0)
     year = models.IntegerField(default=datetime.datetime.now().year)
     month = models.IntegerField(default=datetime.datetime.now().month)
     day = models.IntegerField(default=datetime.datetime.now().day)
+
+    class Meta:
+        unique_together = ('task', 'year', 'month', 'day')
 
 
 class ProjectDailyReporting(BaseModel):
     """
     at 1 AM a celery worker will do the calculations
     """
-    project = models.ForeignKey(Project, on_delete=CASCADE, unique=True)
+    project = models.ForeignKey(Project, on_delete=CASCADE)
     total_time_seconds = models.IntegerField(default=0)
     year = models.IntegerField(default=datetime.datetime.now().year)
     month = models.IntegerField(default=datetime.datetime.now().month)
     day = models.IntegerField(default=datetime.datetime.now().day)
+
+    class Meta:
+        unique_together = ('project', 'year', 'month', 'day')

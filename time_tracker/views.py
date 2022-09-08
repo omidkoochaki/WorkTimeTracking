@@ -160,7 +160,6 @@ class InviteMembersView(generics.CreateAPIView):
         # if self.request.user in Project.objects.get(id=self.request.data.get('project')):
         invitation_code = random.randint(100000, 999999)
         # TODO: Send Invitation Email - celery task
-        print(serializer)
         serializer.save(invitation_code=invitation_code)
 
 
@@ -174,8 +173,7 @@ class ResponseToInvitation(generics.UpdateAPIView):
         code = self.request.data.get('invitation_code')
         email = self.request.user.email
         prj = invitation_code_validator(email, code)
-        print(prj)
-        print(dir(prj))
+
         if prj != -1:
             # prj = Project.objects.get(id=validate)
             # prj.members.add(self.request.user)
