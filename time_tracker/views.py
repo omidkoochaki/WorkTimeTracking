@@ -1,13 +1,16 @@
 import datetime
 import random
+from http.client import HTTPException
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, viewsets, permissions, generics
+from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from core.response_status_codes import TagNames, ResponseCodes
 from time_tracker.permissions import IsMemberInProject, IsProjectOwner, IsAllowedToStopTaskTime
 from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 from .functions import invitation_code_validator
@@ -17,24 +20,26 @@ from .serializers import ProjectSerializer, TaskSerializer, WorkTimeRecordSerial
 
 class ProjectAPIView(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
+    queryset = Project.objects.select_related('members').all()
     permission_classes = [
         permissions.IsAuthenticated
     ]
 
-    @swagger_auto_schema(operation_description="This method will return a list of projects owned by the user",
-                         tags=['Projects'], operation_summary="Returns list of User's projects", )
+    @swagger_auto_schema(tags=['Projects'],
+                         operation_summary="Returns list of User's projects",
+                         responses=ResponseCodes.CODES.value, )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will create a project owned by the user",
-                         tags=['Projects'], operation_summary="Creates a project owned by user",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.PROJECTS_TAG_NAME.value],
+                         operation_summary="Creates a project owned by user",
+                         responses=ResponseCodes.CODES.value)
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will return a project owned by the user by its id",
-                         tags=['Projects'], operation_summary="Get a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.PROJECTS_TAG_NAME.value],
+                         operation_summary="Get a project owned by user by its id",
+                         responses=ResponseCodes.CODES.value)
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
@@ -138,8 +143,8 @@ class WorkingTimeAPIViewStop(APIView):
         doer = self.request.user
         project = self.request.data.get('project')
         task = self.request.data.get('task')
-        work_time_record = WorkTimeRecord.objects\
-            .filter(doer=doer, project=project, task=task, end_time=None)\
+        work_time_record = WorkTimeRecord.objects \
+            .filter(doer=doer, project=project, task=task, end_time=None) \
             .update(end_time=datetime.datetime.now().timestamp())
         return Response({'msg': 'done, have a good time!', 'data': work_time_record})
 
@@ -178,7 +183,7 @@ class ResponseToInvitation(generics.UpdateAPIView):
             prj.save()
             return Response({"msg": f"welcome to {prj.title}"})
         else:
-            raise Exception("You are not invited")
+            raise HTTPException("You are not invited")
 
     # def perform_update(self, serializer):
     #     pass

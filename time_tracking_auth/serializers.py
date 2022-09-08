@@ -12,7 +12,7 @@ from time_tracker.serializers import ProjectSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     member_in_projects = ProjectSerializer(many=True, read_only=True)
-    owner_of_projects = ProjectSerializer(many=True, read_only=True)
+    owner_of_projects = ProjectSerializer(many=True, read_only=True)#931155
 
     class Meta:
         model = User

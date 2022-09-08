@@ -40,7 +40,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('time_tracker.urls')),
+    path('api/', include('time_tracker.urls'), name='api'),
     path('auth/', include('time_tracking_auth.urls')),
     path(r'', include_docs_urls(title='Working Time Tracker API')),
     # re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

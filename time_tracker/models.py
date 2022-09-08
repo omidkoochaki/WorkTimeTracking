@@ -42,7 +42,7 @@ class Task(BaseModel):
         unique_together = ('project', 'title')
 
 
-class WorkTimeRecord(models.Model):
+class WorkTimeRecord(BaseModel):
     """
     each task can get done in different times.
     """
@@ -59,7 +59,6 @@ class WorkTimeRecord(models.Model):
 
     @property
     def duration(self):
-        print(self.start_time, self.end_time, '=*' * 30)
         if self.end_time is not None:
             return self.end_time - self.start_time
         else:
@@ -84,7 +83,7 @@ class TaskDailyReporting(BaseModel):
     """
     at 1 AM a celery worker will do the calculations
     """
-    task = models.ForeignKey(Task, on_delete=CASCADE)
+    task = models.ForeignKey(Task, on_delete=CASCADE, unique=True)
     total_time_seconds = models.IntegerField(default=0)
     year = models.IntegerField(default=datetime.datetime.now().year)
     month = models.IntegerField(default=datetime.datetime.now().month)
@@ -95,7 +94,7 @@ class ProjectDailyReporting(BaseModel):
     """
     at 1 AM a celery worker will do the calculations
     """
-    project = models.ForeignKey(Project, on_delete=CASCADE)
+    project = models.ForeignKey(Project, on_delete=CASCADE, unique=True)
     total_time_seconds = models.IntegerField(default=0)
     year = models.IntegerField(default=datetime.datetime.now().year)
     month = models.IntegerField(default=datetime.datetime.now().month)
