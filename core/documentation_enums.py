@@ -4,7 +4,7 @@ import enum
 class TagNames(enum.Enum):
     PROJECTS_TAG_NAME = "Projects"
     TASKS_TAG_NAME = "Tasks"
-    # _TAG_NAME = "Tasks"
+    INVITE_MEMBERS = "Invite Members"
 
 
 class ResponseCodes(enum.Enum):

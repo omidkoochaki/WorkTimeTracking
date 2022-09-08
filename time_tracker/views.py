@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from core.response_status_codes import TagNames, ResponseCodes
+from core.documentation_enums import TagNames, ResponseCodes
 from time_tracker.permissions import IsMemberInProject, IsProjectOwner, IsAllowedToStopTaskTime
 from time_tracker.models import Project, Task, WorkTimeRecord, InvitedMembers
 from .functions import invitation_code_validator
@@ -25,7 +25,7 @@ class ProjectAPIView(viewsets.ModelViewSet):
         permissions.IsAuthenticated
     ]
 
-    @swagger_auto_schema(tags=['Projects'],
+    @swagger_auto_schema(tags=[TagNames.PROJECTS_TAG_NAME.value],
                          operation_summary="Returns list of User's projects",
                          responses=ResponseCodes.CODES.value, )
     def list(self, request, *args, **kwargs):
@@ -43,15 +43,15 @@ class ProjectAPIView(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will delete a project owned by the user by its id",
-                         tags=['Projects'], operation_summary="remove a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.PROJECTS_TAG_NAME.value],
+                         operation_summary="remove a project owned by user by its id",
+                         responses=ResponseCodes.CODES.value)
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will update a project owned by the user by its id",
-                         tags=['Projects'], operation_summary="update a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.PROJECTS_TAG_NAME.value],
+                         operation_summary="update a project owned by user by its id",
+                         responses=ResponseCodes.CODES.value)
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
@@ -68,32 +68,33 @@ class TaskAPIView(viewsets.ModelViewSet):
         permissions.IsAuthenticated
     ]
 
-    @swagger_auto_schema(operation_description="This method will return a list of projects owned by the user",
-                         tags=['Tasks'], operation_summary="Returns list of User's projects", )
+    @swagger_auto_schema(tags=[TagNames.TASKS_TAG_NAME.value],
+                         operation_summary="Returns list of User's tasks",
+                         responses=ResponseCodes.CODES.value)
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will create a project owned by the user",
-                         tags=['Tasks'], operation_summary="Creates a project owned by user",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.TASKS_TAG_NAME.value],
+                         operation_summary="Creates a new task",
+                         responses=ResponseCodes.CODES.value)
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will return a project owned by the user by its id",
-                         tags=['Tasks'], operation_summary="Get a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.TASKS_TAG_NAME.value],
+                         operation_summary="Get a task by its id",
+                         responses=ResponseCodes.CODES.value)
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will delete a project owned by the user by its id",
-                         tags=['Tasks'], operation_summary="remove a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.TASKS_TAG_NAME.value],
+                         operation_summary="remove a task by its id",
+                         responses=ResponseCodes.CODES.value)
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description="This method will update a project owned by the user by its id",
-                         tags=['Tasks'], operation_summary="update a project owned by user by its id",
-                         responses={'404': 'unauthorized'})
+    @swagger_auto_schema(tags=[TagNames.TASKS_TAG_NAME.value],
+                         operation_summary="update a task by its id",
+                         responses=ResponseCodes.CODES.value)
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
@@ -113,23 +114,6 @@ class WorkingTimeAPIViewCreate(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(doer=self.request.user)
-        # if self.request.user in Project.objects.get(id=self.request.data.get('project')):
-        #     serializer.save(doer=self.request.user)
-        # else:
-        #     raise Exception("You should be a member in this project")
-
-    # def create(self, request, *args, **kwargs):
-    #     return super().create(request, *args, **kwargs)
-
-    # def get_object(self):
-    #     return WorkTimeRecord.objects.all()
-
-    # def get_queryset(self):
-    #     # return self.request.user.leads.all()
-    #     return WorkTimeRecord.objects.all()
-    #
-    # def perform_create(self, serializer):
-    #     serializer.save()
 
 
 class WorkingTimeAPIViewStop(APIView):
@@ -156,8 +140,10 @@ class InviteMembersView(generics.CreateAPIView):
         IsProjectOwner
     ]
 
+    @swagger_auto_schema(operation_description="This method will update a project owned by the user by its id",
+                         tags=['Tasks'], operation_summary="update a project owned by user by its id",
+                         responses={'404': 'unauthorized'})
     def perform_create(self, serializer):
-        # if self.request.user in Project.objects.get(id=self.request.data.get('project')):
         invitation_code = random.randint(100000, 999999)
         # TODO: Send Invitation Email - celery task
         serializer.save(invitation_code=invitation_code)
@@ -175,13 +161,8 @@ class ResponseToInvitation(generics.UpdateAPIView):
         prj = invitation_code_validator(email, code)
 
         if prj != -1:
-            # prj = Project.objects.get(id=validate)
-            # prj.members.add(self.request.user)
             prj.members.add(self.request.user)
             prj.save()
             return Response({"msg": f"welcome to {prj.title}"})
         else:
             raise HTTPException("You are not invited")
-
-    # def perform_update(self, serializer):
-    #     pass
